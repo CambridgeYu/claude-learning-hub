@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Memory Demo - 智能记忆系统演示</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .memory-types {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .memory-type-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .memory-type-card:hover {
+            background: #e7f3ff;
+            border-left-color: #667eea;
+        }
+        
+        .memory-type-card.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #764ba2;
+        }
+        
+        .memory-type-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .memory-type-desc {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: 20%;
+        }
+        
+        .message.ai {
+            background: white;
+            border: 1px solid #e0e0e0;
+            margin-right: 20%;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .chat-input button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .memory-timeline {
+            margin-top: 20px;
+        }
+        
+        .timeline-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-type {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .timeline-time {
+            font-size: 0.85em;
+            color: #999;
+        }
+        
+        .timeline-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .memory-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .extraction-demo {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .extraction-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .extracted-memory {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 3px solid #28a745;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .forgetting-curve {
+            margin-top: 20px;
+        }
+        
+        .curve-chart {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Auto-Memory Demo</h1>
+            <p>智能记忆系统演示 - 理解AI如何记住和管理上下文</p>
+        </header>
+        
+        <div class="memory-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalMemories">24</div>
+                <div class="stat-label">总记忆数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="shortTerm">8</div>
+                <div class="stat-label">短期记忆</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="longTerm">12</div>
+                <div class="stat-label">长期记忆</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="projectMemories">4</div>
+                <div class="stat-label">项目记忆</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <!-- Left: Memory Types & Timeline -->
+            <div class="card">
+                <h3>📚 记忆类型</h3>
+                <div class="memory-types">
+                    <div class="memory-type-card active" onclick="selectMemoryType('short-term')">
+                        <div class="memory-type-name">⚡ 短期记忆</div>
+                        <div class="memory-type-desc">当前对话上下文（最近10轮）</div>
+                    </div>
+                    <div class="memory-type-card" onclick="selectMemoryType('long-term')">
+                        <div class="memory-type-name">💾 长期记忆</div>
+                        <div class="memory-type-desc">跨会话的用户偏好和事实</div>
+                    </div>
+                    <div class="memory-type-card" onclick="selectMemoryType('project')">
+                        <div class="memory-type-name">📁 项目记忆</div>
+                        <div class="memory-type-desc">项目相关的知识和决策</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 20px;">🕐 记忆时间线</h3>
+                <div class="memory-timeline" id="memoryTimeline">
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="timeline-type">💾 长期记忆</span>
+                            <span class="timeline-time">2天前</span>
+                        </div>
+                        <div class="timeline-content">
+                            用户偏好：喜欢简洁的代码风格，使用Python作为主要编程语言
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="timeline-type">📁 项目记忆</span>
+                            <span class="timeline-time">1天前</span>
+                        </div>
+                        <div class="timeline-content">
+                            项目决策：采用FastAPI框架，使用PostgreSQL数据库
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="timeline-type">⚡ 短期记忆</span>
+                            <span class="timeline-time">刚刚</span>
+                        </div>
+                        <div class="timeline-content">
+                            当前任务：学习Auto-Memory模块的实现原理
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forgetting-curve">
+                    <h4 style="color: #667eea; margin-bottom: 10px;">📉 遗忘曲线</h4>
+                    <div class="curve-chart">
+                        <canvas id="forgettingCurve"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Chat & Extraction Demo -->
+            <div class="card">
+                <h3>💬 对话演示</h3>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai">
+                            <strong>AI助手：</strong>您好！我是具备记忆能力的AI助手。我会记住我们的对话内容，并在后续交流中使用这些信息。让我们开始对话吧！
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="showExtractedMemories()">🔍 查看提取的记忆</button>
+                    <button class="btn btn-secondary" onclick="clearMemories()">🗑️ 清除记忆</button>
+                    <button class="btn btn-primary" onclick="simulateConversation()">🎬 模拟对话</button>
+                </div>
+                
+                <div class="extraction-demo" id="extractionDemo" style="display: none;">
+                    <div class="extraction-title">🧠 从对话中提取的记忆</div>
+                    <div id="extractedMemories"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let currentMemoryType = 'short-term';
+        let conversationHistory = [];
+        
+        // Sample memories for demonstration
+        const sampleMemories = [
+            { type: 'preference', content: '用户喜欢Python编程语言', confidence: 0.95 },
+            { type: 'fact', content: '用户在一家科技公司工作', confidence: 0.88 },
+            { type: 'context', content: '当前正在学习AI开发', confidence: 0.92 },
+            { type: 'decision', content: '选择使用FastAPI框架', confidence: 0.90 }
+        ];
+        
+        // Select memory type
+        function selectMemoryType(type) {
+            currentMemoryType = type;
+            document.querySelectorAll('.memory-type-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messages = document.getElementById('chatMessages');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = '<strong>您：</strong>' + escapeHtml(message);
+            messages.appendChild(userMsg);
+            
+            // Simulate AI response with memory usage
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai';
+                
+                // Check if we can use memory
+                const memoryContext = getMemoryContext(message);
+                
+                if (memoryContext) {
+                    aiMsg.innerHTML = `
+                        <strong>AI助手：</strong>${generateResponse(message)}<br><br>
+                        <div style="background: #e7f3ff; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                            <strong>🧠 使用的记忆：</strong><br>
+                            ${memoryContext}
+                        </div>
+                    `;
+                } else {
+                    aiMsg.innerHTML = '<strong>AI助手：</strong>' + generateResponse(message);
+                }
+                
+                messages.appendChild(aiMsg);
+                messages.scrollTop = messages.scrollHeight;
+                
+                // Extract and store memory
+                extractMemory(message);
+            }, 1000);
+            
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        // Generate response
+        function generateResponse(message) {
+            const responses = [
+                '我理解您的问题了。基于之前的对话，我可以为您提供帮助。',
+                '这是一个很好的问题！让我结合我们之前讨论的内容来回答。',
+                '根据我的记忆，您对这方面已经有了一些了解。让我补充更多细节。',
+                '我记得您之前提到过相关的内容。这里是更深入的解释。'
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // Get memory context
+        function getMemoryContext(message) {
+            const lowerMsg = message.toLowerCase();
+            
+            if (lowerMsg.includes('python') || lowerMsg.includes('编程')) {
+                return '长期记忆：用户偏好Python编程语言';
+            }
+            
+            if (lowerMsg.includes('项目') || lowerMsg.includes('fastapi')) {
+                return '项目记忆：采用FastAPI框架和PostgreSQL';
+            }
+            
+            if (lowerMsg.includes('学习') || lowerMsg.includes('ai')) {
+                return '短期记忆：当前正在学习AI开发相关知识';
+            }
+            
+            return null;
+        }
+        
+        // Extract memory
+        function extractMemory(message) {
+            const extractedMemories = document.getElementById('extractedMemories');
+            const demo = document.getElementById('extractionDemo');
+            
+            // Simulate memory extraction
+            const newMemory = {
+                type: ['preference', 'fact', 'context'][Math.floor(Math.random() * 3)],
+                content: `从对话中提取：${message.substring(0, 30)}...`,
+                confidence: (0.8 + Math.random() * 0.15).toFixed(2)
+            };
+            
+            extractedMemories.innerHTML += `
+                <div class="extracted-memory">
+                    <strong>类型：</strong>${newMemory.type}<br>
+                    <strong>内容：</strong>${newMemory.content}<br>
+                    <strong>置信度：</strong>${newMemory.confidence}
+                </div>
+            `;
+            
+            demo.style.display = 'block';
+            
+            // Update stats
+            const totalEl = document.getElementById('totalMemories');
+            totalEl.textContent = parseInt(totalEl.textContent) + 1;
+        }
+        
+        // Show extracted memories
+        function showExtractedMemories() {
+            const demo = document.getElementById('extractionDemo');
+            demo.style.display = demo.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Clear memories
+        function clearMemories() {
+            if (confirm('确定要清除所有记忆吗？')) {
+                document.getElementById('extractedMemories').innerHTML = '';
+                document.getElementById('extractionDemo').style.display = 'none';
+                document.getElementById('totalMemories').textContent = '0';
+                alert('✅ 记忆已清除');
+            }
+        }
+        
+        // Simulate conversation
+        async function simulateConversation() {
+            const scenarios = [
+                '我喜欢用Python写代码',
+                '我在一家科技公司工作',
+                '我正在学习AI开发',
+                '我们项目决定使用FastAPI'
+            ];
+            
+            for (const scenario of scenarios) {
+                document.getElementById('messageInput').value = scenario;
+                await sendMessage();
+                await sleep(1500);
+            }
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        // Sleep helper
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize forgetting curve chart
+        window.onload = function() {
+            new Chart(document.getElementById('forgettingCurve'), {
+                type: 'line',
+                data: {
+                    labels: ['1小时', '1天', '3天', '1周', '2周', '1月'],
+                    datasets: [{
+                        label: '记忆保留率 (%)',
+                        data: [100, 80, 65, 50, 40, 30],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html>

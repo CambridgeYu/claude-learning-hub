@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Skills - 交互式技能库</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .search-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .skill-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .skill-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .skill-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+        
+        .skill-title {
+            font-size: 1.4em;
+            color: #333;
+        }
+        
+        .skill-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .tag {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        
+        .tag.beginner { background: #d4edda; color: #155724; }
+        .tag.intermediate { background: #fff3cd; color: #856404; }
+        .tag.advanced { background: #f8d7da; color: #721c24; }
+        
+        .view-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+        
+        .view-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .skill-detail h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .skill-detail h3 {
+            color: #333;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .skill-detail p, .skill-detail li {
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .skill-detail ul, .skill-detail ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .example-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Claude Skills Library</h1>
+            <p class="subtitle">交互式技能库 - 掌握专业工作流程和最佳实践</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-skills">5</div>
+                <div class="stat-label">可用技能</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="categories">5</div>
+                <div class="stat-label">分类</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-examples">25+</div>
+                <div class="stat-label">实战示例</div>
+            </div>
+        </div>
+        
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" 
+                   placeholder="🔍 搜索技能... (例如: code review, API design, testing)">
+        </div>
+        
+        <div class="skills-grid" id="skillsGrid">
+            <!-- Skills will be dynamically loaded here -->
+        </div>
+    </div>
+    
+    <div class="modal" id="skillModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div class="skill-detail" id="skillDetail"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Skills data
+        const skills = [
+            {
+                id: 'code-review',
+                title: '代码审查',
+                icon: '🔍',
+                description: '系统化的代码审查流程，确保代码质量和最佳实践',
+                tags: ['beginner', 'code-quality', 'best-practices'],
+                category: '开发',
+                content: `
+                    <h2>🔍 代码审查 Skill</h2>
+                    
+                    <h3>📋 概述</h3>
+                    <p>代码审查是保证软件质量的关键环节。本Skill提供了一套完整的代码审查流程和检查清单。</p>
+                    
+                    <h3>✅ 审查清单</h3>
+                    <ol>
+                        <li><strong>代码规范</strong>
+                            <ul>
+                                <li>命名是否清晰易懂？</li>
+                                <li>代码格式是否一致？</li>
+                                <li>注释是否充分且准确？</li>
+                            </ul>
+                        </li>
+                        <li><strong>功能正确性</strong>
+                            <ul>
+                                <li>逻辑是否正确？</li>
+                                <li>边界条件是否处理？</li>
+                                <li>错误处理是否完善？</li>
+                            </ul>
+                        </li>
+                        <li><strong>性能考虑</strong>
+                            <ul>
+                                <li>是否有明显的性能瓶颈？</li>
+                                <li>算法复杂度是否合理？</li>
+                                <li>是否有不必要的重复计算？</li>
+                            </ul>
+                        </li>
+                        <li><strong>安全性</strong>
+                            <ul>
+                                <li>输入验证是否充分？</li>
+                                <li>是否有SQL注入风险？</li>
+                                <li>敏感信息是否加密？</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>💡 使用示例</h3>
+                    <div class="example-box">
+                        <strong>Prompt示例：</strong>
+                        <div class="code-block">
+请审查以下Python代码，重点关注：<br>
+1. 代码可读性和规范性<br>
+2. 潜在的性能问题<br>
+3. 安全性漏洞<br>
+4. 改进建议<br><br>
+[在此粘贴代码]
+                        </div>
+                    </div>
+                    
+                    <h3>📊 评分标准</h3>
+                    <ul>
+                        <li>⭐⭐⭐⭐⭐ 优秀：无需修改，可直接合并</li>
+                        <li>⭐⭐⭐⭐ 良好：少量小问题，建议优化</li>
+                        <li>⭐⭐⭐ 一般：有明显问题，需要修改</li>
+                        <li>⭐⭐ 较差：存在严重问题，必须重写</li>
+                        <li>⭐ 很差：完全不可接受</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'api-design',
+                title: 'API设计',
+                icon: '🌐',
+                description: 'RESTful API设计的最佳实践和模式',
+                tags: ['intermediate', 'backend', 'architecture'],
+                category: '架构',
+                content: `
+                    <h2>🌐 API设计 Skill</h2>
+                    
+                    <h3>📋 核心原则</h3>
+                    <ol>
+                        <li><strong>RESTful设计</strong>
+                            <ul>
+                                <li>使用正确的HTTP方法（GET, POST, PUT, DELETE）</li>
+                                <li>资源命名清晰一致</li>
+                                <li>使用合适的状态码</li>
+                            </ul>
+                        </li>
+                        <li><strong>版本控制</strong>
+                            <ul>
+                                <li>在URL中包含版本号（/api/v1/users）</li>
+                                <li>保持向后兼容</li>
+                                <li>提前通知废弃的API</li>
+                            </ul>
+                        </li>
+                        <li><strong>错误处理</strong>
+                            <ul>
+                                <li>返回有意义的错误信息</li>
+                                <li>使用标准的错误格式</li>
+                                <li>包含错误代码便于调试</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>💡 设计模式</h3>
+                    <div class="example-box">
+                        <strong>资源嵌套示例：</strong>
+                        <div class="code-block">
+# 好的设计<br>
+GET /users/{id}/posts          # 获取用户的文章<br>
+POST /users/{id}/posts         # 创建用户的新文章<br>
+GET /users/{id}/posts/{postId} # 获取特定文章<br><br>
+
+# 避免的设计<br>
+GET /getUsersPosts?userId=xxx  # ❌ 不RESTful<br>
+POST /createPost               # ❌ 动词不应该在URL中
+                        </div>
+                    </div>
+                    
+                    <h3>📝 响应格式规范</h3>
+                    <div class="code-block">
+{<br>
+&nbsp;&nbsp;"status": "success",<br>
+&nbsp;&nbsp;"data": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"id": 1,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"name": "John Doe",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"email": "john@example.com"<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;"meta": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"timestamp": "2024-01-20T10:30:00Z",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"version": "v1"<br>
+&nbsp;&nbsp;}<br>
+}
+                    </div>
+                `
+            },
+            {
+                id: 'testing-best-practices',
+                title: '测试最佳实践',
+                icon: '🧪',
+                description: '编写高质量测试用例的方法和技巧',
+                tags: ['intermediate', 'testing', 'quality'],
+                category: '质量保障',
+                content: `
+                    <h2>🧪 测试最佳实践 Skill</h2>
+                    
+                    <h3>📋 测试金字塔</h3>
+                    <ol>
+                        <li><strong>单元测试（70%）</strong>
+                            <ul>
+                                <li>测试单个函数或方法</li>
+                                <li>快速执行</li>
+                                <li>不依赖外部系统</li>
+                            </ul>
+                        </li>
+                        <li><strong>集成测试（20%）</strong>
+                            <ul>
+                                <li>测试模块间交互</li>
+                                <li>验证数据流</li>
+                                <li>可能需要mock外部依赖</li>
+                            </ul>
+                        </li>
+                        <li><strong>E2E测试（10%）</strong>
+                            <ul>
+                                <li>测试完整用户流程</li>
+                                <li>模拟真实场景</li>
+                                <li>较慢但更全面</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>✅ AAA模式</h3>
+                    <div class="example-box">
+                        <strong>Arrange-Act-Assert:</strong>
+                        <div class="code-block">
+def test_add_user():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;# Arrange - 准备<br>
+&nbsp;&nbsp;&nbsp;&nbsp;user_data = {"name": "John", "email": "john@test.com"}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;# Act - 执行<br>
+&nbsp;&nbsp;&nbsp;&nbsp;result = add_user(user_data)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;# Assert - 断言<br>
+&nbsp;&nbsp;&nbsp;&nbsp;assert result.status == "success"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;assert result.user.name == "John"
+                        </div>
+                    </div>
+                    
+                    <h3>🎯 测试覆盖要点</h3>
+                    <ul>
+                        <li>正常路径（Happy Path）</li>
+                        <li>边界条件（空值、极大值、极小值）</li>
+                        <li>异常情况（错误输入、网络失败）</li>
+                        <li>并发场景（如果适用）</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'database-migration',
+                title: '数据库迁移',
+                icon: '🗄️',
+                description: '安全地管理和执行数据库 schema 变更',
+                tags: ['advanced', 'database', 'devops'],
+                category: '运维',
+                content: `
+                    <h2>🗄️ 数据库迁移 Skill</h2>
+                    
+                    <h3>📋 迁移原则</h3>
+                    <ol>
+                        <li><strong>向后兼容</strong>
+                            <ul>
+                                <li>先添加新字段，再删除旧字段</li>
+                                <li>分阶段进行破坏性变更</li>
+                                <li>保持数据完整性</li>
+                            </ul>
+                        </li>
+                        <li><strong>可回滚</strong>
+                            <ul>
+                                <li>每个迁移都要有down方法</li>
+                                <li>测试回滚流程</li>
+                                <li>备份重要数据</li>
+                            </ul>
+                        </li>
+                        <li><strong>原子性</strong>
+                            <ul>
+                                <li>使用事务</li>
+                                <li>要么全部成功，要么全部失败</li>
+                                <li>避免部分应用的状态</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>💡 迁移策略</h3>
+                    <div class="example-box">
+                        <strong>重命名字段的安全方式：</strong>
+                        <div class="code-block">
+# 第1步：添加新字段<br>
+ALTER TABLE users ADD COLUMN full_name VARCHAR(100);<br><br>
+
+# 第2步：双写（新旧字段都更新）<br>
+UPDATE users SET full_name = CONCAT(first_name, ' ', last_name);<br><br>
+
+# 第3步：迁移读取逻辑到新字段<br>
+# （在代码层面完成）<br><br>
+
+# 第4步：删除旧字段（确认无问题后）<br>
+ALTER TABLE users DROP COLUMN first_name, DROP COLUMN last_name;
+                        </div>
+                    </div>
+                    
+                    <h3>⚠️ 常见陷阱</h3>
+                    <ul>
+                        <li>在大表上直接添加索引（会锁表）</li>
+                        <li>没有测试回滚脚本</li>
+                        <li>在生产环境直接执行未测试的迁移</li>
+                        <li>忽略外键约束的影响</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'deployment-guide',
+                title: '部署指南',
+                icon: '🚀',
+                description: '从开发到生产的完整部署流程和最佳实践',
+                tags: ['advanced', 'devops', 'production'],
+                category: '部署',
+                content: `
+                    <h2>🚀 部署指南 Skill</h2>
+                    
+                    <h3>📋 部署流程</h3>
+                    <ol>
+                        <li><strong>准备阶段</strong>
+                            <ul>
+                                <li>代码审查通过</li>
+                                <li>所有测试通过</li>
+                                <li>更新版本号</li>
+                                <li>生成changelog</li>
+                            </ul>
+                        </li>
+                        <li><strong>构建阶段</strong>
+                            <ul>
+                                <li>编译代码（如需要）</li>
+                                <li>运行静态分析</li>
+                                <li>构建Docker镜像</li>
+                                <li>推送到镜像仓库</li>
+                            </ul>
+                        </li>
+                        <li><strong>部署阶段</strong>
+                            <ul>
+                                <li>蓝绿部署或滚动更新</li>
+                                <li>健康检查</li>
+                                <li>监控指标</li>
+                                <li>日志收集</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>💡 Docker部署示例</h3>
+                    <div class="example-box">
+                        <strong>Dockerfile最佳实践：</strong>
+                        <div class="code-block">
+FROM python:3.9-slim<br><br>
+
+# 设置工作目录<br>
+WORKDIR /app<br><br>
+
+# 先复制依赖文件（利用缓存）<br>
+COPY requirements.txt .<br>
+RUN pip install --no-cache-dir -r requirements.txt<br><br>
+
+# 再复制代码<br>
+COPY . .<br><br>
+
+# 使用非root用户<br>
+RUN useradd -m appuser<br>
+USER appuser<br><br>
+
+# 暴露端口<br>
+EXPOSE 8000<br><br>
+
+# 健康检查<br>
+HEALTHCHECK --interval=30s --timeout=3s \<br>
+&nbsp;&nbsp;CMD curl -f http://localhost:8000/health || exit 1<br><br>
+
+# 启动命令<br>
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"]
+                        </div>
+                    </div>
+                    
+                    <h3>🎯 部署检查清单</h3>
+                    <ul>
+                        <li>□ 环境变量配置正确</li>
+                        <li>□ 数据库连接池大小合适</li>
+                        <li>□ 日志级别设置正确</li>
+                        <li>□ 监控告警已配置</li>
+                        <li>□ 备份策略已实施</li>
+                        <li>□ SSL证书有效</li>
+                        <li>□ 防火墙规则正确</li>
+                        <li>□ 回滚方案就绪</li>
+                    </ul>
+                `
+            }
+        ];
+        
+        // Render skills
+        function renderSkills(skillsToRender) {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = '';
+            
+            skillsToRender.forEach(skill => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.onclick = () => openModal(skill);
+                
+                card.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-icon">${skill.icon}</span>
+                        <h3 class="skill-title">${skill.title}</h3>
+                    </div>
+                    <p class="skill-description">${skill.description}</p>
+                    <div class="skill-tags">
+                        ${skill.tags.map(tag => `<span class="tag ${tag}">${tag}</span>`).join('')}
+                    </div>
+                    <button class="view-btn">查看详情 →</button>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Open modal
+        function openModal(skill) {
+            const modal = document.getElementById('skillModal');
+            const detail = document.getElementById('skillDetail');
+            detail.innerHTML = skill.content;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('skillModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = skills.filter(skill => 
+                skill.title.toLowerCase().includes(searchTerm) ||
+                skill.description.toLowerCase().includes(searchTerm) ||
+                skill.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
+                skill.category.toLowerCase().includes(searchTerm)
+            );
+            renderSkills(filtered);
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('skillModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+        
+        // Initial render
+        renderSkills(skills);
+    </script>
+</body>
+</html>

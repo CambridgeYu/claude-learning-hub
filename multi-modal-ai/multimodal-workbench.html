@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Modal AI Workbench - 多模态AI工作台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .upload-zone:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #764ba2;
+        }
+        .upload-icon { font-size: 3em; margin-bottom: 10px; }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .file-icon { font-size: 1.5em; margin-right: 12px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #333; }
+        .file-meta { font-size: 0.85em; color: #666; }
+        .file-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .status-uploaded { background: #d4edda; color: #155724; }
+        .status-processing { background: #fff3cd; color: #856404; }
+        .status-analyzed { background: #cce5ff; color: #004085; }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 600;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+        }
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover { background: #5a6268; }
+        
+        .result-panel {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .result-content {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .analysis-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        .analysis-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .analysis-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .mode-btn.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        .mode-btn:hover { border-color: #667eea; }
+        
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Multi-Modal AI Workbench</h1>
+            <p>多模态AI工作台 - 处理文本、图像、音频的综合实验环境</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalFiles">0</div>
+                <div class="stat-label">上传文件数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="processedFiles">0</div>
+                <div class="stat-label">已处理文件</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="analysisCount">0</div>
+                <div class="stat-label">分析次数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="modalTypes">0</div>
+                <div class="stat-label">模态类型</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="panel">
+                <h2>📤 文件上传区</h2>
+                
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <p><strong>点击或拖拽文件到此处</strong></p>
+                    <p style="color: #666; margin-top: 10px;">支持图片、PDF、文本文件</p>
+                    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+                
+                <div class="file-list" id="fileList">
+                    <!-- 文件列表将动态生成 -->
+                </div>
+                
+                <button class="btn btn-secondary" onclick="clearAllFiles()" style="width: 100%; margin-top: 15px;">
+                    🗑️ 清空所有文件
+                </button>
+            </div>
+            
+            <div class="panel">
+                <h2>🔬 多模态分析</h2>
+                
+                <div class="mode-selector">
+                    <button class="mode-btn active" onclick="selectMode(this, 'image')">🖼️ 图像理解</button>
+                    <button class="mode-btn" onclick="selectMode(this, 'document')">📄 文档分析</button>
+                    <button class="mode-btn" onclick="selectMode(this, 'text-image')">💬 图文对话</button>
+                    <button class="mode-btn" onclick="selectMode(this, 'extraction')">🔍 信息提取</button>
+                </div>
+                
+                <div class="input-section">
+                    <label for="promptInput">分析指令：</label>
+                    <textarea id="promptInput" rows="4" placeholder="请输入您想要AI执行的分析任务...">请详细描述这张图片的内容，包括主要元素、颜色、构图和情感氛围。</textarea>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="startAnalysis()">🚀 开始分析</button>
+                    <button class="btn btn-secondary" onclick="loadExample()">📋 加载示例</button>
+                </div>
+                
+                <div id="analysisResult" style="display: none;">
+                    <div class="result-panel">
+                        <div class="result-title">📊 分析结果</div>
+                        <div class="result-content" id="resultContent"></div>
+                    </div>
+                    
+                    <div class="analysis-grid" id="analysisMetrics">
+                        <!-- 分析指标将动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>📚 多模态能力指南</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">🖼️ 图像理解</h3>
+                    <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                        <li>物体识别与分类</li>
+                        <li>场景描述与分析</li>
+                        <li>文字提取（OCR）</li>
+                        <li>图表解读</li>
+                        <li>艺术风格分析</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">📄 文档处理</h3>
+                    <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                        <li>PDF内容提取</li>
+                        <li>表格数据解析</li>
+                        <li>文档摘要生成</li>
+                        <li>关键信息定位</li>
+                        <li>格式转换建议</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">💬 图文对话</h3>
+                    <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                        <li>基于图像的问答</li>
+                        <li>视觉推理任务</li>
+                        <li>创意文案生成</li>
+                        <li>产品描述撰写</li>
+                        <li>教育辅导辅助</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 10px;">🔍 信息提取</h3>
+                    <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                        <li>实体识别（人名、地点等）</li>
+                        <li>关系抽取</li>
+                        <li>情感分析</li>
+                        <li>主题分类</li>
+                        <li>结构化数据输出</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let uploadedFiles = [];
+        let currentMode = 'image';
+        let analysisHistory = [];
+        
+        // 处理文件上传
+        function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const fileObj = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: formatFileSize(file.size),
+                    type: getFileType(file),
+                    status: 'uploaded'
+                };
+                uploadedFiles.push(fileObj);
+            });
+            updateFileList();
+            updateStats();
+        }
+        
+        // 获取文件类型图标
+        function getFileType(file) {
+            if (file.type.startsWith('image/')) return 'image';
+            if (file.type === 'application/pdf') return 'pdf';
+            if (file.type.startsWith('text/')) return 'text';
+            return 'unknown';
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+        
+        // 更新文件列表显示
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = uploadedFiles.map(file => `
+                <div class="file-item">
+                    <div class="file-icon">${getFileIcon(file.type)}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${file.size} • ${file.type.toUpperCase()}</div>
+                    </div>
+                    <div class="file-status status-${file.status}">${getStatusText(file.status)}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 获取文件图标
+        function getFileIcon(type) {
+            const icons = {
+                'image': '🖼️',
+                'pdf': '📄',
+                'text': '📝',
+                'unknown': '📎'
+            };
+            return icons[type] || '📎';
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const texts = {
+                'uploaded': '已上传',
+                'processing': '处理中',
+                'analyzed': '已分析'
+            };
+            return texts[status] || status;
+        }
+        
+        // 清空所有文件
+        function clearAllFiles() {
+            uploadedFiles = [];
+            updateFileList();
+            updateStats();
+        }
+        
+        // 选择分析模式
+        function selectMode(btn, mode) {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = mode;
+            
+            // 更新提示文本
+            const prompts = {
+                'image': '请详细描述这张图片的内容，包括主要元素、颜色、构图和情感氛围。',
+                'document': '请分析这份文档的主要内容，提取关键信息并生成摘要。',
+                'text-image': '结合图片和文字，回答用户的问题或完成指定任务。',
+                'extraction': '从提供的材料中提取以下信息：实体、关系、关键数据点。'
+            };
+            document.getElementById('promptInput').value = prompts[mode];
+        }
+        
+        // 开始分析
+        async function startAnalysis() {
+            if (uploadedFiles.length === 0) {
+                alert('请先上传至少一个文件！');
+                return;
+            }
+            
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) {
+                alert('请输入分析指令！');
+                return;
+            }
+            
+            // 模拟分析过程
+            const resultPanel = document.getElementById('analysisResult');
+            const resultContent = document.getElementById('resultContent');
+            const metricsGrid = document.getElementById('analysisMetrics');
+            
+            resultPanel.style.display = 'block';
+            resultContent.innerHTML = '<p style="color: #666;">⏳ 正在分析中...</p>';
+            
+            // 模拟API调用延迟
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // 生成模拟结果
+            const mockResults = generateMockResults(currentMode, prompt);
+            resultContent.innerHTML = `<p>${mockResults.description}</p>`;
+            
+            // 显示分析指标
+            metricsGrid.innerHTML = mockResults.metrics.map(metric => `
+                <div class="analysis-card">
+                    <div class="analysis-label">${metric.label}</div>
+                    <div class="analysis-value">${metric.value}</div>
+                </div>
+            `).join('');
+            
+            // 更新文件状态
+            uploadedFiles.forEach(file => {
+                if (file.status === 'uploaded') file.status = 'analyzed';
+            });
+            updateFileList();
+            
+            // 更新统计
+            analysisHistory.push({
+                mode: currentMode,
+                timestamp: new Date(),
+                files: uploadedFiles.length
+            });
+            updateStats();
+        }
+        
+        // 生成模拟结果
+        function generateMockResults(mode, prompt) {
+            const results = {
+                'image': {
+                    description: '这是一张风景照片，展示了日落时分的海滩景色。画面中有金色的沙滩、碧蓝的海水和橙红色的天空。远处有几艘帆船在海面上航行，近处有一些贝壳散落在沙滩上。整体氛围宁静而浪漫，光线柔和温暖。',
+                    metrics: [
+                        { label: '识别物体数', value: '12个' },
+                        { label: '主要颜色', value: '橙色、蓝色、金色' },
+                        { label: '置信度', value: '94.5%' },
+                        { label: '处理时间', value: '1.8秒' }
+                    ]
+                },
+                'document': {
+                    description: '该文档是一份商业计划书，共25页。主要内容包括市场分析、产品描述、财务预测和团队介绍。核心业务是开发一款AI驱动的教育平台，目标市场是K-12在线教育领域。预计首年营收500万元，第三年达到3000万元。',
+                    metrics: [
+                        { label: '文档页数', value: '25页' },
+                        { label: '提取关键点', value: '18个' },
+                        { label: '可读性评分', value: '8.5/10' },
+                        { label: '处理时间', value: '3.2秒' }
+                    ]
+                },
+                'text-image': {
+                    description: '根据图片和您的问题，这是一个现代简约风格的客厅设计。白色沙发搭配木质茶几，墙上挂着抽象艺术画作。整体色调以白色和木色为主，营造出温馨舒适的居家氛围。建议在沙发旁添加一盏落地灯以增加照明层次。',
+                    metrics: [
+                        { label: '问题相关性', value: '96%' },
+                        { label: '建议数量', value: '5条' },
+                        { label: '详细程度', value: '高' },
+                        { label: '处理时间', value: '2.1秒' }
+                    ]
+                },
+                'extraction': {
+                    description: '从材料中提取的关键信息：\n• 人物：张三（CEO）、李四（CTO）、王五（CFO）\n• 公司：科技创新有限公司\n• 地点：北京市海淀区中关村\n• 时间：2024年1月成立\n• 融资：A轮融资2000万元\n• 业务：人工智能软件开发',
+                    metrics: [
+                        { label: '实体数量', value: '15个' },
+                        { label: '关系对', value: '8对' },
+                        { label: '准确率', value: '92%' },
+                        { label: '处理时间', value: '1.5秒' }
+                    ]
+                }
+            };
+            return results[mode] || results['image'];
+        }
+        
+        // 加载示例
+        function loadExample() {
+            // 模拟添加示例文件
+            uploadedFiles = [
+                { id: 1, name: 'sample-photo.jpg', size: '2.3 MB', type: 'image', status: 'uploaded' },
+                { id: 2, name: 'document.pdf', size: '1.5 MB', type: 'pdf', status: 'uploaded' }
+            ];
+            updateFileList();
+            updateStats();
+            
+            document.getElementById('promptInput').value = '请分析这张图片中的主要内容，并提取关键信息。';
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = uploadedFiles.length;
+            document.getElementById('processedFiles').textContent = 
+                uploadedFiles.filter(f => f.status === 'analyzed').length;
+            document.getElementById('analysisCount').textContent = analysisHistory.length;
+            
+            const modalTypes = new Set(uploadedFiles.map(f => f.type));
+            document.getElementById('modalTypes').textContent = modalTypes.size;
+        }
+        
+        // 初始化
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Optimization - 成本优化分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .card h3 { color: #667eea; margin-bottom: 15px; }
+        
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .cost-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .cost-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .chart-container { height: 300px; margin: 20px 0; }
+        
+        .suggestion-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .suggestion-box h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        .suggestion-box ul {
+            margin-left: 20px;
+        }
+        .suggestion-box li {
+            margin-bottom: 5px;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Cost Optimization - 成本优化</h1>
+            <p>AI应用成本分析与优化建议</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">$1,234</div>
+                <div class="stat-label">本月费用</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #28a745;">-23%</div>
+                <div class="stat-label">较上月节省</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$0.002</div>
+                <div class="stat-label">平均每次调用</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">89%</div>
+                <div class="stat-label">预算使用率</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>📊 成本构成分析</h3>
+                <div class="chart-container">
+                    <canvas id="costPieChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📈 成本趋势</h3>
+                <div class="chart-container">
+                    <canvas id="costTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>💵 成本明细</h3>
+            <div class="cost-breakdown">
+                <div class="cost-item">
+                    <div style="color: #666;">API调用</div>
+                    <div class="cost-value">$856</div>
+                    <div style="color: #666; margin-top: 5px;">69.4%</div>
+                </div>
+                <div class="cost-item">
+                    <div style="color: #666;">向量存储</div>
+                    <div class="cost-value">$234</div>
+                    <div style="color: #666; margin-top: 5px;">19.0%</div>
+                </div>
+                <div class="cost-item">
+                    <div style="color: #666;">计算资源</div>
+                    <div class="cost-value">$144</div>
+                    <div style="color: #666; margin-top: 5px;">11.6%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>💡 优化建议</h3>
+            <div class="suggestion-box">
+                <h4>🎯 立即可实施的优化</h4>
+                <ul>
+                    <li>启用缓存可减少30% API调用 - 预计节省 $257/月</li>
+                    <li>使用批量处理可降低20%成本 - 预计节省 $171/月</li>
+                    <li>切换到更便宜的模型可节省15% - 预计节省 $128/月</li>
+                </ul>
+            </div>
+            
+            <div class="suggestion-box">
+                <h4>📊 中长期优化策略</h4>
+                <ul>
+                    <li>实施请求去重机制 - 预计节省 10-15%</li>
+                    <li>优化Prompt长度，减少Token消耗 - 预计节省 8-12%</li>
+                    <li>使用模型蒸馏降低推理成本 - 预计节省 20-30%</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Cost Pie Chart
+        new Chart(document.getElementById('costPieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['API调用', '向量存储', '计算资源'],
+                datasets: [{
+                    data: [69.4, 19.0, 11.6],
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Cost Trend Chart
+        new Chart(document.getElementById('costTrendChart'), {
+            type: 'line',
+            data: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                datasets: [{
+                    label: '月度成本 ($)',
+                    data: [1800, 1650, 1500, 1400, 1300, 1234],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+</body>
+</html>

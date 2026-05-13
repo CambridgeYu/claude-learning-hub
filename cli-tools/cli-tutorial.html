@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude CLI Tutorial - 命令行工具教程</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        
+        .progress-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .step.completed .step-circle {
+            background: #28a745;
+            color: white;
+        }
+        .step-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tutorial-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .tutorial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .tutorial-title {
+            font-size: 1.8em;
+            color: #333;
+        }
+        .step-counter {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .content-section {
+            margin-bottom: 25px;
+        }
+        .content-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .content-section p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+        }
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .code-title {
+            color: #667eea;
+            font-size: 0.9em;
+        }
+        .copy-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover { background: #444; }
+        .code-content {
+            line-height: 1.6;
+        }
+        .code-comment { color: #6a9955; }
+        .code-command { color: #569cd6; }
+        .code-string { color: #ce9178; }
+        .code-keyword { color: #c586c0; }
+        
+        .tip-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .tip-box strong {
+            color: #856404;
+        }
+        .tip-box p {
+            color: #856404;
+            margin: 0;
+        }
+        
+        .warning-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .warning-box strong {
+            color: #721c24;
+        }
+        .warning-box p {
+            color: #721c24;
+            margin: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .checklist li::before {
+            content: '☐';
+            margin-right: 10px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        .checklist li.checked::before {
+            content: '☑';
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .tutorial-title { font-size: 1.4em; }
+            .step-label { font-size: 0.75em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖥️ Claude CLI Tutorial</h1>
+            <p>命令行工具快速上手教程 - 从安装到高级用法</p>
+        </header>
+        
+        <div class="progress-bar">
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">安装配置</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">基础命令</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">对话管理</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">高级功能</div>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="step-circle">5</div>
+                    <div class="step-label">最佳实践</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tutorial-panel" id="tutorialContent">
+            <!-- 动态内容将在这里渲染 -->
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" disabled>← 上一步</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        const tutorialData = {
+            1: {
+                title: '📦 安装与配置',
+                content: `
+                    <div class="content-section">
+                        <h3>1. 安装 Claude CLI</h3>
+                        <p>Claude CLI 是一个强大的命令行工具，让您可以在终端中直接与 Claude AI 交互。</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">使用 pip 安装</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">pip</span> install claude-cli
+                            </div>
+                        </div>
+                        
+                        <div class="tip-box">
+                            <strong>💡 提示：</strong>
+                            <p>建议使用 Python 3.8+ 版本，并在虚拟环境中安装以避免依赖冲突。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>2. 配置 API Key</h3>
+                        <p>首次使用前，需要配置您的 Anthropic API Key。</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">设置 API Key</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> config --api-key <span class="code-string">your-api-key-here</span>
+                            </div>
+                        </div>
+                        
+                        <p>或者通过环境变量设置（更安全）：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Linux/Mac</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">export</span> ANTHROPIC_API_KEY=<span class="code-string">"your-api-key-here"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Windows PowerShell</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">$env:</span>ANTHROPIC_API_KEY=<span class="code-string">"your-api-key-here"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ 安全警告：</strong>
+                            <p>永远不要将 API Key 提交到版本控制系统！使用 .gitignore 或环境变量来保护您的密钥。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>3. 验证安装</h3>
+                        <p>运行以下命令确认安装成功：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">检查版本</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> --version
+                            </div>
+                        </div>
+                        
+                        <ul class="checklist">
+                            <li>✓ 成功安装 claude-cli</li>
+                            <li>✓ 配置了 API Key</li>
+                            <li>✓ 验证了版本号显示正常</li>
+                        </ul>
+                    </div>
+                `
+            },
+            2: {
+                title: '💬 基础命令',
+                content: `
+                    <div class="content-section">
+                        <h3>1. 发送第一条消息</h3>
+                        <p>使用 claude ask 命令向 Claude 发送问题：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">简单问答</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"请解释什么是机器学习？"</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>2. 交互式对话模式</h3>
+                        <p>进入持续对话模式，可以连续提问：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">启动交互模式</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> chat
+                            </div>
+                        </div>
+                        
+                        <p>在交互模式中：</p>
+                        <ul style="color: #555; line-height: 2; padding-left: 20px;">
+                            <li>输入您的问题并按 Enter</li>
+                            <li>输入 <code>/exit</code> 或 <code>/quit</code> 退出</li>
+                            <li>输入 <code>/clear</code> 清除对话历史</li>
+                            <li>输入 <code>/help</code> 查看所有可用命令</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>3. 处理文件内容</h3>
+                        <p>让 Claude 分析文件内容：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">分析文本文件</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"总结这个文件的内容"</span> --file readme.md
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">管道输入</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">cat</span> data.csv | <span class="code-command">claude</span> ask <span class="code-string">"分析这些数据并给出洞察"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="tip-box">
+                            <strong>💡 提示：</strong>
+                            <p>支持的文件格式：.txt, .md, .py, .js, .json, .csv, .xml, .yaml 等文本文件。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>4. 指定模型和参数</h3>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">选择模型</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"写一首诗"</span> --model claude-3-opus-20240229
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">调整温度参数</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"创意写作"</span> --temperature 0.9 --max-tokens 2000
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            3: {
+                title: '📚 对话管理',
+                content: `
+                    <div class="content-section">
+                        <h3>1. 保存和加载对话</h3>
+                        <p>保存重要的对话以便后续参考：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">保存对话</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> save <span class="code-string">"my-conversation"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">加载对话</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> load <span class="code-string">"my-conversation"</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>2. 列出所有对话</h3>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">查看对话列表</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> conversations --list
+                            </div>
+                        </div>
+                        
+                        <p>输出示例：</p>
+                        <div class="code-block">
+                            <div class="code-content">
+📁 Saved Conversations:
+  1. my-conversation (2024-01-15 14:30)
+  2. code-review (2024-01-14 09:15)
+  3. brainstorming (2024-01-13 16:45)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>3. 导出对话</h3>
+                        <p>将对话导出为不同格式：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">导出为 Markdown</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> export <span class="code-string">"my-conversation"</span> --format markdown --output conversation.md
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">导出为 JSON</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> export <span class="code-string">"my-conversation"</span> --format json --output conversation.json
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>4. 删除对话</h3>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">删除指定对话</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> delete <span class="code-string">"old-conversation"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ 注意：</strong>
+                            <p>删除操作不可恢复，请谨慎使用。建议先导出备份再删除。</p>
+                        </div>
+                    </div>
+                `
+            },
+            4: {
+                title: '🚀 高级功能',
+                content: `
+                    <div class="content-section">
+                        <h3>1. 批量处理</h3>
+                        <p>一次性处理多个文件或请求：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">批量分析文件</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> batch <span class="code-string">"总结这个文件"</span> --files *.md --output summaries.txt
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>2. 自定义系统提示</h3>
+                        <p>为特定任务定制 Claude 的行为：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">创建系统提示文件</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-comment"># system-prompt.txt</span>
+你是一个专业的Python代码审查员。
+请重点关注：
+1. 代码安全性
+2. 性能优化
+3. 最佳实践
+4. 可读性
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">使用自定义提示</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"审查这段代码"</span> --system-prompt system-prompt.txt --file code.py
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>3. 流式输出</h3>
+                        <p>实时显示响应，而不是等待全部完成：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">启用流式模式</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"写一篇长文章"</span> --stream
+                            </div>
+                        </div>
+                        
+                        <div class="tip-box">
+                            <strong>💡 提示：</strong>
+                            <p>流式输出对于生成长文本特别有用，可以立即看到开始的内容，无需等待完整响应。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>4. 集成到工作流</h3>
+                        <p>将 Claude CLI 与其他工具结合使用：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Git 提交信息生成</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">git</span> diff --staged | <span class="code-command">claude</span> ask <span class="code-string">"基于这些变更生成简洁的commit message"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">代码重构助手</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">cat</span> legacy_code.py | <span class="code-command">claude</span> ask <span class="code-string">"重构这段代码，使其更符合Python最佳实践"</span> > refactored.py
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            5: {
+                title: '✨ 最佳实践',
+                content: `
+                    <div class="content-section">
+                        <h3>1. Prompt 编写技巧</h3>
+                        <ul style="color: #555; line-height: 2; padding-left: 20px;">
+                            <li><strong>明确具体：</strong>避免模糊的问题，提供足够的上下文</li>
+                            <li><strong>分步请求：</strong>复杂任务分解为多个小步骤</li>
+                            <li><strong>提供示例：</strong>Few-shot learning 提高准确性</li>
+                            <li><strong>指定格式：</strong>明确期望的输出格式（JSON、表格等）</li>
+                        </ul>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">好的 Prompt 示例</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> ask <span class="code-string">"请将以下数据转换为JSON格式，包含name、age、email三个字段：张三,25,zhangsan@example.com; 李四,30,lisi@example.com"</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>2. 成本控制</h3>
+                        <ul style="color: #555; line-height: 2; padding-left: 20px;">
+                            <li>使用 <code>--max-tokens</code> 限制响应长度</li>
+                            <li>选择合适的模型（claude-3-haiku 更便宜）</li>
+                            <li>缓存常用响应，避免重复调用</li>
+                            <li>定期查看使用情况：<code>claude usage</code></li>
+                        </ul>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">查看用量统计</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> usage --month current
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>3. 错误处理</h3>
+                        <p>常见问题及解决方案：</p>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">API 速率限制</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-comment"># 添加重试逻辑</span>
+<span class="code-command">claude</span> ask <span class="code-string">"..."</span> --retry 3 --retry-delay 5
+                            </div>
+                        </div>
+                        
+                        <div class="tip-box">
+                            <strong>💡 建议：</strong>
+                            <p>在生产环境中使用时，始终添加错误处理和重试机制。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>4. 安全注意事项</h3>
+                        <ul style="color: #555; line-height: 2; padding-left: 20px;">
+                            <li>不要在 Prompt 中包含敏感信息（密码、密钥等）</li>
+                            <li>验证 Claude 生成的代码后再执行</li>
+                            <li>对输入数据进行 sanitization 处理</li>
+                            <li>定期轮换 API Key</li>
+                        </ul>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ 重要提醒：</strong>
+                            <p>虽然 Claude 很强大，但它仍然可能产生错误或有害的输出。始终保持人工审核，特别是在生产环境中。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h3>🎉 恭喜完成教程！</h3>
+                        <p>您现在已经掌握了 Claude CLI 的核心使用方法。接下来可以：</p>
+                        <ul style="color: #555; line-height: 2; padding-left: 20px;">
+                            <li>探索更多高级功能和插件</li>
+                            <li>将 Claude CLI 集成到您的开发工作流中</li>
+                            <li>阅读官方文档了解最新特性</li>
+                            <li>加入社区分享您的使用经验</li>
+                        </ul>
+                        
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">获取帮助</span>
+                                <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                            </div>
+                            <div class="code-content">
+<span class="code-command">claude</span> --help
+<span class="code-command">claude</span> &lt;command&gt; --help
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+        
+        // 渲染当前步骤
+        function renderStep(step) {
+            const panel = document.getElementById('tutorialContent');
+            const data = tutorialData[step];
+            
+            panel.innerHTML = `
+                <div class="tutorial-header">
+                    <h2 class="tutorial-title">${data.title}</h2>
+                    <span class="step-counter">步骤 ${step} / ${totalSteps}</span>
+                </div>
+                ${data.content}
+            `;
+            
+            // 更新进度条
+            updateProgressBar(step);
+            
+            // 更新按钮状态
+            document.getElementById('prevBtn').disabled = step === 1;
+            document.getElementById('nextBtn').textContent = step === totalSteps ? '完成 ✓' : '下一步 →';
+        }
+        
+        // 更新进度条
+        function updateProgressBar(currentStep) {
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // 下一步
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                renderStep(currentStep);
+            } else {
+                alert('🎉 恭喜！您已完成所有教程步骤！');
+            }
+        }
+        
+        // 上一步
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStep(currentStep);
+            }
+        }
+        
+        // 复制代码
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const codeContent = codeBlock.querySelector('.code-content').innerText;
+            
+            navigator.clipboard.writeText(codeContent).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = '✓ 已复制';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+        
+        // 初始化
+        renderStep(currentStep);
+    </script>
+</body>
+</html>

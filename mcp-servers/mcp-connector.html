@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Connector - MCP服务器连接器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .server-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .server-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .server-item:hover {
+            background: #e7f3ff;
+            border-left-color: #667eea;
+        }
+        
+        .server-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .server-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .server-desc {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .server-tools {
+            font-size: 0.85em;
+            color: #667eea;
+        }
+        
+        .tool-browser {
+            margin-top: 20px;
+        }
+        
+        .tool-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tool-item:hover {
+            background: #e7f3ff;
+        }
+        
+        .tool-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .tool-desc {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .connection-panel {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .test-console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .console-line {
+            margin-bottom: 5px;
+        }
+        
+        .console-line.info { color: #4fc3f7; }
+        .console-line.success { color: #81c784; }
+        .console-line.error { color: #ef5350; }
+        
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .usage-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .usage-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .usage-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔌 MCP Connector</h1>
+            <p>MCP服务器连接器 - 管理和测试Model Context Protocol服务</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalServers">3</div>
+                <div class="stat-label">总服务器数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="connectedServers">2</div>
+                <div class="stat-label">已连接</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableTools">15</div>
+                <div class="stat-label">可用工具</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayCalls">1,234</div>
+                <div class="stat-label">今日调用</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <!-- Left: Server Management -->
+            <div class="card">
+                <h3>🖥️ MCP服务器管理</h3>
+                
+                <div class="server-list">
+                    <div class="server-item" onclick="selectServer('file-manager')">
+                        <div class="server-header">
+                            <span class="server-name">📁 File Manager</span>
+                            <span class="status-badge status-connected">已连接</span>
+                        </div>
+                        <div class="server-desc">文件读写和管理服务</div>
+                        <div class="server-tools">可用工具: 5个</div>
+                    </div>
+                    
+                    <div class="server-item" onclick="selectServer('weather-api')">
+                        <div class="server-header">
+                            <span class="server-name">🌤️ Weather API</span>
+                            <span class="status-badge status-connected">已连接</span>
+                        </div>
+                        <div class="server-desc">天气信息查询服务</div>
+                        <div class="server-tools">可用工具: 3个</div>
+                    </div>
+                    
+                    <div class="server-item" onclick="selectServer('github-api')">
+                        <div class="server-header">
+                            <span class="server-name">💻 GitHub API</span>
+                            <span class="status-badge status-disconnected">未连接</span>
+                        </div>
+                        <div class="server-desc">GitHub Issues和PRs管理</div>
+                        <div class="server-tools">可用工具: 7个</div>
+                    </div>
+                </div>
+                
+                <div class="connection-panel">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">➕ 添加新服务器</h4>
+                    <div class="form-group">
+                        <label for="serverName">服务器名称：</label>
+                        <input type="text" id="serverName" placeholder="例如：Database Connector">
+                    </div>
+                    <div class="form-group">
+                        <label for="serverUrl">服务器URL：</label>
+                        <input type="text" id="serverUrl" placeholder="例如：http://localhost:8080">
+                    </div>
+                    <button class="btn btn-primary" onclick="addServer()">添加服务器</button>
+                </div>
+            </div>
+            
+            <!-- Right: Tool Browser & Testing -->
+            <div class="card">
+                <h3>🔧 工具浏览器</h3>
+                
+                <div class="tool-browser" id="toolBrowser">
+                    <div class="tool-item" onclick="testTool('read_file')">
+                        <div class="tool-name">📖 read_file</div>
+                        <div class="tool-desc">读取指定文件的内容</div>
+                    </div>
+                    <div class="tool-item" onclick="testTool('write_file')">
+                        <div class="tool-name">✏️ write_file</div>
+                        <div class="tool-desc">写入内容到文件</div>
+                    </div>
+                    <div class="tool-item" onclick="testTool('list_directory')">
+                        <div class="tool-name">📂 list_directory</div>
+                        <div class="tool-desc">列出目录内容</div>
+                    </div>
+                    <div class="tool-item" onclick="testTool('get_weather')">
+                        <div class="tool-name">🌡️ get_weather</div>
+                        <div class="tool-desc">获取城市天气信息</div>
+                    </div>
+                    <div class="tool-item" onclick="testTool('search_issues')">
+                        <div class="tool-name">🔍 search_issues</div>
+                        <div class="tool-desc">搜索GitHub Issues</div>
+                    </div>
+                </div>
+                
+                <h4 style="color: #667eea; margin: 20px 0 10px 0;">🧪 工具测试控制台</h4>
+                <div class="form-group">
+                    <label for="toolParams">参数（JSON格式）：</label>
+                    <input type="text" id="toolParams" placeholder='{"path": "/example.txt"}'>
+                </div>
+                <button class="btn btn-success" onclick="executeTool()">执行工具</button>
+                <button class="btn btn-danger" onclick="clearConsole()">清空控制台</button>
+                
+                <div class="test-console" id="testConsole">
+                    <div class="console-line info">// MCP工具测试控制台</div>
+                    <div class="console-line info">// 选择工具并点击"执行工具"开始测试</div>
+                </div>
+                
+                <div class="usage-stats">
+                    <div class="usage-card">
+                        <div class="usage-value">98%</div>
+                        <div class="usage-label">成功率</div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-value">245ms</div>
+                        <div class="usage-label">平均延迟</div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-value">12</div>
+                        <div class="usage-label">活跃会话</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedServer = 'file-manager';
+        let selectedTool = null;
+        
+        // Server configurations
+        const servers = {
+            'file-manager': {
+                name: 'File Manager',
+                tools: ['read_file', 'write_file', 'list_directory', 'delete_file', 'move_file']
+            },
+            'weather-api': {
+                name: 'Weather API',
+                tools: ['get_weather', 'get_forecast', 'get_historical']
+            },
+            'github-api': {
+                name: 'GitHub API',
+                tools: ['search_issues', 'create_issue', 'list_prs', 'merge_pr', 'comment_issue', 'list_repos', 'get_repo_info']
+            }
+        };
+        
+        // Select server
+        function selectServer(serverId) {
+            selectedServer = serverId;
+            const server = servers[serverId];
+            
+            // Update tool browser
+            const toolBrowser = document.getElementById('toolBrowser');
+            toolBrowser.innerHTML = server.tools.map(tool => `
+                <div class="tool-item" onclick="testTool('${tool}')">
+                    <div class="tool-name">🔧 ${tool}</div>
+                    <div class="tool-desc">${server.name} 提供的工具</div>
+                </div>
+            `).join('');
+            
+            logToConsole('info', `已选择服务器: ${server.name}`);
+        }
+        
+        // Test tool
+        function testTool(toolName) {
+            selectedTool = toolName;
+            document.getElementById('toolParams').placeholder = `输入 ${toolName} 的参数`;
+            logToConsole('info', `选择工具: ${toolName}`);
+        }
+        
+        // Execute tool
+        function executeTool() {
+            if (!selectedTool) {
+                alert('请先选择一个工具！');
+                return;
+            }
+            
+            const params = document.getElementById('toolParams').value;
+            
+            logToConsole('info', `执行工具: ${selectedTool}`);
+            logToConsole('info', `参数: ${params || '{}'}`);
+            
+            // Simulate execution
+            setTimeout(() => {
+                logToConsole('success', `✅ 工具执行成功`);
+                logToConsole('info', `返回结果: {"status": "success", "data": {...}}`);
+                
+                // Update stats
+                const callsEl = document.getElementById('todayCalls');
+                callsEl.textContent = parseInt(callsEl.textContent.replace(',', '')) + 1;
+            }, 1000);
+        }
+        
+        // Add server
+        function addServer() {
+            const name = document.getElementById('serverName').value;
+            const url = document.getElementById('serverUrl').value;
+            
+            if (!name || !url) {
+                alert('请填写服务器名称和URL！');
+                return;
+            }
+            
+            logToConsole('info', `添加新服务器: ${name}`);
+            logToConsole('info', `URL: ${url}`);
+            
+            setTimeout(() => {
+                logToConsole('success', `✅ 服务器添加成功`);
+                
+                // Update stats
+                const totalEl = document.getElementById('totalServers');
+                totalEl.textContent = parseInt(totalEl.textContent) + 1;
+            }, 500);
+            
+            // Clear form
+            document.getElementById('serverName').value = '';
+            document.getElementById('serverUrl').value = '';
+        }
+        
+        // Clear console
+        function clearConsole() {
+            document.getElementById('testConsole').innerHTML = `
+                <div class="console-line info">// MCP工具测试控制台</div>
+                <div class="console-line info">// 选择工具并点击"执行工具"开始测试</div>
+            `;
+        }
+        
+        // Log to console
+        function logToConsole(type, message) {
+            const console = document.getElementById('testConsole');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // Initialize
+        selectServer('file-manager');
+    </script>
+</body>
+</html>
